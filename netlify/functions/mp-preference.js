@@ -1,5 +1,5 @@
 exports.handler = async (event) => {
-  const ACCESS_TOKEN = "APP_USR-5814431525655814-070416-5a3f022d7a2b114065cbf9521f1160fa-3515683173";
+  const ACCESS_TOKEN = "APP_USR-4893270369313324-070416-1bd800898ad39aaf03c4a4d74ecbdcfa-63664519";
   const BASE_URL = "https://3ideas.ar";
   const headers = {
     "Access-Control-Allow-Origin": "*",
