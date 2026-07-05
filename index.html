@@ -1424,7 +1424,7 @@ function renderAdminContent(){
         <div class="top" style="margin-top:8px;">
           <strong>${fmt(o.total)}</strong>
           <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
-            <select id="status_${o.id}" onchange="updateOrderStatus('${o.id}', this.value)">
+            <select id="status_${o.id}" onchange="currentStatusMap['${o.id}']=this.value; updateOrderStatus('${o.id}', this.value)">
               <option ${o.status==='Nuevo'?'selected':''}>Nuevo</option>
               <option ${o.status==='Pago pendiente'?'selected':''}>Pago pendiente</option>
               <option ${o.status==='Pago aprobado'?'selected':''}>Pago aprobado</option>
@@ -1433,7 +1433,7 @@ function renderAdminContent(){
               <option ${o.status==='En camino'?'selected':''}>En camino</option>
               <option ${o.status==='Entregado'?'selected':''}>Entregado</option>
             </select>
-            ${o.phone ? `<button onclick="sendStatusWA('${o.id}', this.previousElementSibling.value)" style="background:#25D366; color:#fff; padding:6px 12px; border-radius:999px; font-size:12px; font-weight:700; border:none; cursor:pointer; white-space:nowrap;">📲 Avisar cliente</button>` : ''}
+            ${o.phone ? `<button onclick="sendStatusWA('${o.id}')" style="background:#25D366; color:#fff; padding:6px 12px; border-radius:999px; font-size:12px; font-weight:700; border:none; cursor:pointer; white-space:nowrap;">📲 Avisar cliente</button>` : ''}
           </div>
         </div>
       </div>
@@ -1927,10 +1927,13 @@ async function addNewProduct(){
   renderGrid();
   toast("Producto agregado");
 }
-function sendStatusWA(orderId, currentStatus){
+const currentStatusMap = {};
+function sendStatusWA(orderId){
   const order = ordersCache.find(x=>x.id===orderId);
   if(!order || !order.phone) return;
-  if(!currentStatus) currentStatus = order.status;
+  // leer del select directamente
+  const sel = document.getElementById("status_"+orderId);
+  const currentStatus = (sel ? sel.value : null) || currentStatusMap[orderId] || order.status;
   const name = order.name;
   const msgs = {
     "Preparando": `Hola ${name}! Te avisamos que tu pedido 3IDEAS (${orderId}) ya está siendo preparado. En breve te contactamos con más detalles 🔨`,
