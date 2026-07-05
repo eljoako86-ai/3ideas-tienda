@@ -1424,7 +1424,7 @@ function renderAdminContent(){
         <div class="top" style="margin-top:8px;">
           <strong>${fmt(o.total)}</strong>
           <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
-            <select id="sel_${o.id}" onchange="var btn=document.getElementById('wabtn_${o.id}'); if(btn)btn.dataset.st=this.value; updateOrderStatus('${o.id}', this.value)">
+            <select data-oid="${o.id}" data-phone="${o.phone}" onchange="changeOrderStatus('${o.id}', this.value, '${o.phone}')" >
               <option ${o.status==='Nuevo'?'selected':''}>Nuevo</option>
               <option ${o.status==='Pago pendiente'?'selected':''}>Pago pendiente</option>
               <option ${o.status==='Pago aprobado'?'selected':''}>Pago aprobado</option>
@@ -1433,7 +1433,6 @@ function renderAdminContent(){
               <option ${o.status==='En camino'?'selected':''}>En camino</option>
               <option ${o.status==='Entregado'?'selected':''}>Entregado</option>
             </select>
-            ${o.phone ? `<button id="wabtn_${o.id}" data-st="${o.status}" onclick="sendStatusWA('${o.id}', this.dataset.st)" style="background:#25D366; color:#fff; padding:6px 12px; border-radius:999px; font-size:12px; font-weight:700; border:none; cursor:pointer; white-space:nowrap;">📲 Avisar cliente</button>` : ''}
           </div>
         </div>
       </div>
@@ -1927,24 +1926,23 @@ async function addNewProduct(){
   renderGrid();
   toast("Producto agregado");
 }
-const currentStatusMap = {};
-function sendStatusWA(orderId, currentStatus){
-  const order = ordersCache.find(x=>x.id===orderId);
-  if(!order || !order.phone) return;
-  if(!currentStatus) currentStatus = order.status;
-  const name = order.name;
+async function changeOrderStatus(orderId, newStatus, phone){
+  await updateOrderStatus(orderId, newStatus);
+  if(!phone) return;
+  const order2 = ordersCache.find(x=>x.id===orderId);
+  const clientName = order2 ? order2.name : "Cliente";
   const msgs = {
-    "Preparando": `Hola ${name}! Te avisamos que tu pedido 3IDEAS (${orderId}) ya está siendo preparado. En breve te contactamos con más detalles 🔨`,
-    "Listo para retirar": `Hola ${name}! Tu pedido 3IDEAS (${orderId}) ya está listo para retirar en nuestro local. Te esperamos! 📦`,
-    "En camino": `Hola ${name}! Tu pedido 3IDEAS (${orderId}) está en camino a tu domicilio 🚚`,
-    "Entregado": `Hola ${name}! Tu pedido 3IDEAS (${orderId}) fue entregado. Muchas gracias por elegirnos! Si tenés alguna consulta estamos a tu disposición. 🎉`,
-    "Pago aprobado": `Hola ${name}! Recibimos tu pago para el pedido 3IDEAS (${orderId}). Ya empezamos a prepararlo! ✅`,
-    "Nuevo": `Hola ${name}! Recibimos tu pedido 3IDEAS (${orderId}). En breve te contactamos para coordinar. 👋`,
-    "Pago pendiente": `Hola ${name}! Tu pedido 3IDEAS (${orderId}) está pendiente de pago. Si tenés alguna consulta avisanos. 💳`
+    "Preparando": "Hola "+clientName+"! Te avisamos que tu pedido 3IDEAS ("+orderId+") ya esta siendo preparado. En breve te contactamos con mas detalles.",
+    "Listo para retirar": "Hola "+clientName+"! Tu pedido 3IDEAS ("+orderId+") ya esta listo para retirar en nuestro local. Te esperamos!",
+    "En camino": "Hola "+clientName+"! Tu pedido 3IDEAS ("+orderId+") esta en camino a tu domicilio.",
+    "Entregado": "Hola "+clientName+"! Tu pedido 3IDEAS ("+orderId+") fue entregado. Muchas gracias por elegirnos! Cualquier consulta estamos a tu disposicion.",
+    "Pago aprobado": "Hola "+clientName+"! Recibimos tu pago para el pedido 3IDEAS ("+orderId+"). Ya empezamos a prepararlo!"
   };
-  const msg = msgs[currentStatus] || `Hola ${name}! Actualización de tu pedido 3IDEAS (${orderId}): ${currentStatus}.`;
-  const url = `https://wa.me/549${order.phone.replace(/\D/g,'')}?text=${encodeURIComponent(msg)}`;
-  window.open(url, '_blank');
+  const msg = msgs[newStatus];
+  if(msg && confirm("Enviar WhatsApp al cliente con el nuevo estado?")){
+    const url = "https://wa.me/549"+phone.replace(/\D/g,'')+"?text="+encodeURIComponent(msg);
+    window.open(url, '_blank');
+  }
 }
 
 async function updateOrderStatus(id, status){
