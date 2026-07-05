@@ -1423,11 +1423,18 @@ function renderAdminContent(){
         <div class="order-items">Tel: ${escapeHtml(o.phone)} · Entrega: ${escapeHtml(o.delivery)}${o.notes?(' · Notas: '+escapeHtml(o.notes)):''}</div>
         <div class="top" style="margin-top:8px;">
           <strong>${fmt(o.total)}</strong>
-          <select onchange="updateOrderStatus('${o.id}', this.value)">
-            <option ${o.status==='Nuevo'?'selected':''}>Nuevo</option>
-            <option ${o.status==='Preparando'?'selected':''}>Preparando</option>
-            <option ${o.status==='Entregado'?'selected':''}>Entregado</option>
-          </select>
+          <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+            <select onchange="updateOrderStatus('${o.id}', this.value)">
+              <option ${o.status==='Nuevo'?'selected':''}>Nuevo</option>
+              <option ${o.status==='Pago pendiente'?'selected':''}>Pago pendiente</option>
+              <option ${o.status==='Pago aprobado'?'selected':''}>Pago aprobado</option>
+              <option ${o.status==='Preparando'?'selected':''}>Preparando</option>
+              <option ${o.status==='Listo para retirar'?'selected':''}>Listo para retirar</option>
+              <option ${o.status==='En camino'?'selected':''}>En camino</option>
+              <option ${o.status==='Entregado'?'selected':''}>Entregado</option>
+            </select>
+            ${o.phone ? `<a href="${buildStatusWAUrl(o)}" target="_blank" style="background:#25D366; color:#fff; padding:6px 12px; border-radius:999px; font-size:12px; font-weight:700; text-decoration:none; white-space:nowrap;">📲 Avisar cliente</a>` : ''}
+          </div>
         </div>
       </div>
     `).join("");
@@ -1920,6 +1927,18 @@ async function addNewProduct(){
   renderGrid();
   toast("Producto agregado");
 }
+function buildStatusWAUrl(order){
+  const msgs = {
+    "Preparando": `Hola ${order.name}! Te avisamos que tu pedido 3IDEAS (${order.id}) ya está siendo preparado. En breve te contactamos con más detalles 🔨`,
+    "Listo para retirar": `Hola ${order.name}! Tu pedido 3IDEAS (${order.id}) ya está listo para retirar en nuestro local. Te esperamos! 📦`,
+    "En camino": `Hola ${order.name}! Tu pedido 3IDEAS (${order.id}) está en camino a tu domicilio 🚚`,
+    "Entregado": `Hola ${order.name}! Tu pedido 3IDEAS (${order.id}) fue entregado. Muchas gracias por elegirnos! Si tenés algún consulta estamos a tu disposición. 🎉`,
+    "Pago aprobado": `Hola ${order.name}! Recibimos tu pago para el pedido 3IDEAS (${order.id}). Ya empezamos a prepararlo! ✅`
+  };
+  const msg = msgs[order.status] || `Hola ${order.name}! Actualización de tu pedido 3IDEAS (${order.id}): ${order.status}.`;
+  return `https://wa.me/549${order.phone.replace(/\D/g,'')}?text=${encodeURIComponent(msg)}`;
+}
+
 async function updateOrderStatus(id, status){
   const o = ordersCache.find(x=>x.id===id);
   if(o){ o.status = status; await saveOrders(); }
