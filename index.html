@@ -1433,7 +1433,7 @@ function renderAdminContent(){
               <option ${o.status==='En camino'?'selected':''}>En camino</option>
               <option ${o.status==='Entregado'?'selected':''}>Entregado</option>
             </select>
-            ${o.phone ? `<button onclick="sendStatusWA('${o.id}')" style="background:#25D366; color:#fff; padding:6px 12px; border-radius:999px; font-size:12px; font-weight:700; border:none; cursor:pointer; white-space:nowrap;">📲 Avisar cliente</button>` : ''}
+            ${o.phone ? `<button onclick="sendStatusWA('${o.id}', this.previousElementSibling.value)" style="background:#25D366; color:#fff; padding:6px 12px; border-radius:999px; font-size:12px; font-weight:700; border:none; cursor:pointer; white-space:nowrap;">📲 Avisar cliente</button>` : ''}
           </div>
         </div>
       </div>
@@ -1927,11 +1927,10 @@ async function addNewProduct(){
   renderGrid();
   toast("Producto agregado");
 }
-function sendStatusWA(orderId){
+function sendStatusWA(orderId, currentStatus){
   const order = ordersCache.find(x=>x.id===orderId);
   if(!order || !order.phone) return;
-  const selectEl = document.getElementById("status_"+orderId);
-  const currentStatus = selectEl ? selectEl.value : order.status;
+  if(!currentStatus) currentStatus = order.status;
   const name = order.name;
   const msgs = {
     "Preparando": `Hola ${name}! Te avisamos que tu pedido 3IDEAS (${orderId}) ya está siendo preparado. En breve te contactamos con más detalles 🔨`,
